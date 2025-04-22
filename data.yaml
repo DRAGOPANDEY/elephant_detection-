@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elephant Detection</title>
+  <style>
+    #loadingMessage {
+      display: none;
+      font-size: 1.2em;
+      color: #ff6600;
+    }
+    #outputVideo {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Elephant Detection in Video</h1>
+
+  <form id="uploadForm">
+    <input type="file" id="videoFile" accept="video/*" required>
+    <button type="submit">Upload and Start Detection</button>
+  </form>
+
+  <div id="loadingMessage">Processing video, please wait...</div>
+
+  <h3>Processed Video</h3>
+  <video id="outputVideo" controls width="640">
+    <source src="" id="videoSource" type="video/mp4">
+  </video>
+
+  <h3>Detection Count: <span id="detectionCount">0</span></h3>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const outputVideo = document.getElementById('outputVideo');
+    const videoSource = document.getElementById('videoSource');
+    const detectionCountElement = document.getElementById('detectionCount');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const videoFile = document.getElementById('videoFile').files[0];
+
+      // Show loading message
+      loadingMessage.style.display = 'block';
+      outputVideo.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('video', videoFile);
+
+      try {
+        // Send the video to the backend
+        const response = await fetch('/start-detection', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Hide loading message and show the processed video
+          loadingMessage.style.display = 'none';
+          outputVideo.style.display = 'block';
+          
+          // Show processed video and detection count
+          videoSource.src = result.videoUrl;
+          outputVideo.load();
+          outputVideo.play();  // Start playing the processed video
+
+          // Display the detection count
+          detectionCountElement.innerText = result.detectionCount;
+        } else {
+          throw new Error('Error processing video!');
+        }
+      } catch (error) {
+        loadingMessage.style.display = 'none';
+        alert(error.message);
+      }
+    });
+  </script>
+</body>
+</html>
+
